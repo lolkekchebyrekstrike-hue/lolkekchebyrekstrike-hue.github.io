@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en" translate="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="google" content="notranslate">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Terminal // F.C.O</title>
+    <style>
+        :root {
+            --bg-color: #0a0a0a;
+            --text-color: #00ff66;
+            --dim-text: #00aa44;
+            --error-color: #ff3333;
+            --panel-bg: #111;
+            --border-color: #333;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Central Terminal */
+        .terminal-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .output-area {
+            flex: 1;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .input-line {
+            display: flex;
+            align-items: center;
+        }
+
+        .prompt {
+            margin-right: 10px;
+            user-select: none;
+        }
+
+        .cmd-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 16px;
+            outline: none;
+        }
+
+        /* Right Control Panel */
+        .control-panel {
+            width: 300px;
+            background-color: var(--panel-bg);
+            border-left: 2px solid var(--border-color);
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel-header {
+            font-weight: bold;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            text-align: center;
+        }
+
+        .btn-about {
+            background: transparent;
+            border: 1px solid var(--text-color);
+            color: var(--text-color);
+            padding: 10px;
+            cursor: pointer;
+            font-family: 'Courier New', Courier, monospace;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .btn-about:hover {
+            background: var(--text-color);
+            color: var(--bg-color);
+            box-shadow: 0 0 10px var(--text-color);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+        }
+        /* --- Pure HTML/CSS Modal Windows --- */
+        .btn-about-link {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 10px;
+            cursor: pointer;
+            font-family: 'Courier New', Courier, monospace;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: block;
+        }
+        .btn-about-link:hover {
+            background: var(--text-color);
+            color: var(--bg-color);
+            box-shadow: 0 0 10px var(--text-color);
+        }
+
+        .close-btn-link {
+            color: var(--text-color);
+            text-decoration: none;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .pure-html-modal {
+            display: none; 
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .pure-html-modal:target {
+            display: flex;
+        }
+
+        .pure-html-modal .modal-content {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            width: 500px;
+            max-width: 90%;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .pure-html-modal .modal-header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .pure-html-modal .modal-body {
+            max-height: 350px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            line-height: 1.4;
+        }
+
+        /* --- Logo F.C.O. Style --- */
+        .panel-logo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            position: relative;
+        }
+
+        .matrix-icon {
+            width: 60px;
+            height: 60px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 6px;
+            position: relative;
+        }
+
+        .chunk {
+            border: 2px solid var(--text-color);
+            box-shadow: 0 0 5px var(--text-color);
+            background: transparent;
+        }
+        .chunk.tl { border-bottom-right-radius: 4px; border-bottom: none; border-right: none; }
+        .chunk.tr { border-bottom-left-radius: 6px; border-bottom: none; border-left: none; transform: rotate(5deg); }
+        .chunk.bl { border-top-right-radius: 5px; border-top: none; border-right: none; }
+        .chunk.br { border-top-left-radius: 3px; border-top: none; border-left: none; width: 85%; height: 85%; }
+
+        .magnifier {
+            position: absolute;
+            bottom: -8px;
+            right: -8px;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .mag-circle {
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--text-color);
+            border-radius: 50%;
+            box-shadow: 0 0 5px var(--text-color);
+            background: var(--bg-color);
+            position: relative;
+            z-index: 2;
+        }
+        .mag-handle {
+            width: 2px;
+            height: 10px;
+            background: var(--text-color);
+            box-shadow: 0 0 5px var(--text-color);
+            transform: rotate(-45deg);
+            position: absolute;
+            bottom: -3px;
+            right: -3px;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Central Terminal Area -->
+    <div class="terminal-container">
+        <div class="output-area" id="output">SYSTEM INITIALIZED...
+TYPE "help" TO SEE AVAILABLE COMMANDS.
+</div>
+        <div class="input-line">
+            <span class="prompt">F.C.O:\></span>
+            <input type="text" id="cmdInput" class="cmd-input" autofocus autocomplete="off" spellcheck="false">
+        </div>
+    </div>
+
+    <!-- Right Control Panel -->
+    <div class="control-panel">
+        <!-- Vector Logo Block -->
+        <div class="panel-logo">
+            <div class="matrix-icon">
+                <div class="chunk tl"></div>
+                <div class="chunk tr"></div>
+                <div class="chunk bl"></div>
+                <div class="chunk br"></div>
+                <div class="magnifier">
+                    <div class="mag-circle"></div>
+                    <div class="mag-handle"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-header">F.C.O. MANAGEMENT</div>
+        <div>STATUS: MONITORING</div>
+        
+        <!-- Action Buttons -->
+        <button class="btn-about" id="aboutBtn">> About Us</button>
+        <a href="#anomaliesModal" class="btn-about-link">> Anomalies</a>
+        <a href="#forumModal" class="btn-about-link">> Forum</a>
+    </div>
+    <!-- Anomalies Pop-up Window -->
+    <div id="anomaliesModal" class="pure-html-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>PROJECT_DATA // ANOMALIES</span>
+                <a href="#" class="close-btn-link">[^]</a>
+            </div>
+            <div class="modal-body">
+                <div id="anomaliesTextContainer">We are currently looking for anomalies related to Roblox.
+
+<span style="color: var(--error-color); font-weight: bold;">[!] ERROR-404: ANOMALIES NOT FOUND</span>
+
+Please visit our forum to submit an anomaly photo and its name (optional), or report directly via email.</div>
+            </div>
+            <a href="#" class="close-btn-link btn-about-link" style="text-align: center;">Close Log</a>
+        </div>
+    </div>
+
+    <!-- Forum Pop-up Window -->
+    <div id="forumModal" class="pure-html-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>EXTERNAL_NET // COMMUNITY_FORUM</span>
+                <a href="#" class="close-btn-link">[^]</a>
+            </div>
+            <div class="modal-body">
+                <div id="forumTextContainer"><span style="color: var(--dim-text);">[CONNECTING TO EXTERNAL ARCHIVES...]
+[SUCCESS] BROADCASTING REDDIT ANOMALY TRACKS:</span>
+
+• <a href="https://reddit.com" target="_blank" style="color: var(--text-color);">LOG_2026_01: Toolbox Script Hijacking Incident</a>
+• <a href="https://reddit.com" target="_blank" style="color: var(--text-color);">LOG_2026_02: RB.FIND Anomalous Corruptions</a>
+• <a href="https://reddit.com" target="_blank" style="color: var(--text-color);">LOG_2026_03: Reported Logic Entities in Empty Baseplates</a>
+
+<hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
+Share your tracking data: Post your findings on Reddit with the tag <span style="color: var(--dim-text);">#FCO_Project</span> or use our direct secure mail terminal.</div>
+            </div>
+            <a href="#" class="close-btn-link btn-about-link" style="text-align: center;">Close Terminal</a>
+        </div>
+    </div>
+    <script>
+        const output = document.getElementById('output');
+        const input = document.getElementById('cmdInput');
+        const aboutBtn = document.getElementById('aboutBtn');
+
+        // Command definitions
+        const commands = {
+            help: () => `AVAILABLE COMMANDS:
+  help   - Show this list
+  status - Check current environment integrity
+  scan   - Scan Toolbox components for anomalies
+  clear  - Clear terminal screen`,
+            
+            status: () => `--- SYSTEM STATUS ---
+CORE: RUNNING
+MODE: find. collect. observe.
+WARNING: Unidentified background scripts detected in local environment.
+CRITICAL: RB.FIND error code 0x88F0 - Connection corrupted.`,
+            
+            scan: () => `INITIALIZING TOXICITY SCAN...
+Searching Toolbox templates...
+[!] Warning: High density of unverified scripts found.
+[!] Warning: Studio hijacking risk detected in 3 packages.
+[!!] ANOMALY DETECTED: Unknown logic entities are observing.`,
+            
+            clear: () => {
+                output.textContent = '';
+                return '';
+            }
+        };
+
+        function printToTerminal(text) {
+            if (text) {
+                output.textContent += `\n${text}\n`;
+                output.scrollTop = output.scrollHeight;
+            }
+        }
+
+        // Input command processing
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const rawInput = input.value.trim();
+                const cmd = rawInput.toLowerCase();
+                
+                if (rawInput) {
+                    output.textContent += `\nF.C.O:\\> ${rawInput}`;
+                    
+                    if (commands[cmd]) {
+                        const result = commands[cmd]();
+                        printToTerminal(result);
+                    } else {
+                        printToTerminal(`'${rawInput}' is not recognized as an internal command. Type "help" for options.`);
+                    }
+                }
+                input.value = '';
+            }
+        });
+
+        // About Us Terminal Output Trigger
+        aboutBtn.addEventListener('click', () => {
+            printToTerminal(`--- ABOUT STUDIO NULL ---
+Developed by: lopday_72
+Contact: lolkekchebyrekstrike@gmail.com
+Objective: Monitor, contain, and survive the infected assets.`);
+        });
+
+        // Retain console input focus
+        document.addEventListener('click', () => input.focus());
+    </script>
+</body>
+</html>
